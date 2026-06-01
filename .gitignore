@@ -6,3 +6,7 @@ public/
 .copernicusmarine*
 .env
 *.log
+
+__pycache__/
+*.pyc
+*.bak.py
