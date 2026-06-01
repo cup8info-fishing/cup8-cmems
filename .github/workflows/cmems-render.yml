@@ -1,0 +1,52 @@
+name: CMEMS render → GitHub Pages
+
+# Render onde CMEMS ogni 6h e pubblica i file statici (PNG + JSON) su GitHub Pages.
+# GRATIS: runner GitHub (RAM sufficiente per il render) + Pages (CDN statico). Niente PC acceso.
+# NB: i workflow schedulati si METTONO IN PAUSA dopo 60 giorni di inattività del repo
+#     (basta un commit per riattivarli).
+
+on:
+  schedule:
+    - cron: '5 0,6,12,18 * * *'   # 00/06/12/18 UTC, ~5 min dopo l'ora (allineato al cron originale)
+  workflow_dispatch: {}            # esecuzione manuale dalla tab Actions (per testare)
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: cmems-pages
+  cancel-in-progress: true
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - name: Install Python deps
+        run: pip install -r requirements.txt
+
+      - name: Render CMEMS → public/waves
+        env:
+          COPERNICUSMARINE_SERVICE_USERNAME: ${{ secrets.COPERNICUSMARINE_SERVICE_USERNAME }}
+          COPERNICUSMARINE_SERVICE_PASSWORD: ${{ secrets.COPERNICUSMARINE_SERVICE_PASSWORD }}
+          CUP8_LAND_GEOJSON: med-land-merged.geojson
+        run: python run_pipeline.py
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+      - id: deploy
+        uses: actions/deploy-pages@v4

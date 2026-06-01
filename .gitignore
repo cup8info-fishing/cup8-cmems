@@ -1,0 +1,8 @@
+node_modules/
+data/
+cache/
+public/
+*.nc
+.copernicusmarine*
+.env
+*.log
