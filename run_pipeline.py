@@ -61,6 +61,16 @@ def main():
                 shutil.copyfile(src, os.path.join(dest, f"h{i:02d}.png"))
                 n += 1
 
+    # 5) Batimetria: tile statici pre-renderizzati (committati in bathy_tiles/) → public/bathy/
+    bathy_src = os.path.join(HERE, "bathy_tiles")
+    if os.path.isdir(bathy_src):
+        bathy_dst = os.path.join(HERE, "public", "bathy")
+        if os.path.isdir(bathy_dst):
+            shutil.rmtree(bathy_dst)
+        shutil.copytree(bathy_src, bathy_dst)
+        nb = sum(len(fs) for _, _, fs in os.walk(bathy_dst))
+        print(f"OK: public/bathy pronta — {nb} tile batimetrici", flush=True)
+
     # Pagina indice/health (root del sito)
     with open(os.path.join(HERE, "public", "index.html"), "w", encoding="utf-8") as f:
         f.write("<!doctype html><meta charset=utf-8><title>cup8 CMEMS</title>"
