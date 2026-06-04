@@ -11,6 +11,7 @@ import sys
 import os
 import argparse
 import subprocess
+import time
 from datetime import datetime, timezone, timedelta
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
@@ -59,11 +60,45 @@ def main():
 
     env = os.environ.copy()
     env["PYTHONIOENCODING"] = "utf-8"
-    result = subprocess.run(cmd, env=env, capture_output=True, text=True, encoding="utf-8", errors="replace")
-    print(result.stdout)
-    if result.returncode != 0:
-        print(f"[cmems] ERROR stderr:\n{result.stderr}", file=sys.stderr)
-        sys.exit(result.returncode)
+
+    # Retry sui blip di connessione/autenticazione Copernicus: il server di auth a volte
+    # è irraggiungibile dai runner CI e il client resta appeso ~20 min prima di arrendersi.
+    # Limitiamo ogni tentativo nel tempo e ritentiamo (solo su errori transitori).
+    ATTEMPTS = 3
+    PER_ATTEMPT_TIMEOUT = 600   # 10 min per tentativo (un download normale dura pochi min)
+    RETRY_DELAY = 90            # pausa tra i tentativi
+    TRANSIENT = ("could not connect", "authentication system", "connection", "timed out",
+                 "timeout", "temporar", "max retries", "ssl", "502", "503", "504",
+                 "remotedisconnect", "reset by peer", "gateway")
+
+    result = None
+    for i in range(1, ATTEMPTS + 1):
+        print(f"[cmems] tentativo {i}/{ATTEMPTS}…", flush=True)
+        try:
+            result = subprocess.run(cmd, env=env, capture_output=True, text=True,
+                                    encoding="utf-8", errors="replace",
+                                    timeout=PER_ATTEMPT_TIMEOUT)
+        except subprocess.TimeoutExpired:
+            print(f"[cmems] ⚠ tentativo {i}: superato il timeout di {PER_ATTEMPT_TIMEOUT}s, interrotto.", file=sys.stderr)
+            if i < ATTEMPTS:
+                time.sleep(RETRY_DELAY)
+            continue
+        if result.stdout:
+            print(result.stdout)
+        if result.returncode == 0:
+            break
+        err = (result.stderr or "").strip()
+        print(f"[cmems] ⚠ tentativo {i} fallito (rc={result.returncode}):\n{err}", file=sys.stderr)
+        if not any(k in err.lower() for k in TRANSIENT):
+            # Errore NON transitorio (es. credenziali errate, dataset inesistente) → inutile ritentare.
+            sys.exit(result.returncode)
+        if i < ATTEMPTS:
+            print(f"[cmems] errore transitorio → ritento tra {RETRY_DELAY}s…", flush=True)
+            time.sleep(RETRY_DELAY)
+
+    if result is None or result.returncode != 0:
+        print(f"[cmems] ERROR: download fallito dopo {ATTEMPTS} tentativi (Copernicus irraggiungibile).", file=sys.stderr)
+        sys.exit(1)
 
     out_path = os.path.join(DATA_DIR, out_file)
     if not os.path.exists(out_path):
