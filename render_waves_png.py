@@ -116,7 +116,7 @@ PAPERCUT_DARK = 0.35        # intensità 0-1 (quanto scurisce la banda sottostan
 #    "hard" 1px) → a zoom alto diventava una SCALETTA. Supersampling = AA reale.
 #    2 = buon compromesso qualità/tempo (render 4× i pixel). 3 = più liscio, più lento
 #    (render 9× i pixel = figura 9000px). Scelto 3 dall'utente per bordo max liscio.
-SUPERSAMPLE = 1   # niente supersample/LANCZOS: bordi banda più netti (l'AA li ammorbidiva troppo a zoom alto)
+SUPERSAMPLE = 2   # AA leggero (anti-scaletta) ma SENZA papercut → bordi lisci e non sfocati
 
 
 def main():
