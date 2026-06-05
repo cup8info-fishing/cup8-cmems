@@ -26,14 +26,14 @@ DATA = os.path.join(HERE, "data")
 LNG_MIN, LNG_MAX = -6.0, 36.0
 LAT_MIN, LAT_MAX = 30.0, 46.0
 CHUNK_DEG = 2.0
-CHUNK_PX = 1485                       # px per chunk 2° → ~150 m/px
+CHUNK_PX = 1936                       # px per chunk 2° → ~115 m/px (nativo EMODnet)
 NX = int(round((LNG_MAX - LNG_MIN) / CHUNK_DEG))   # 21
 NY = int(round((LAT_MAX - LAT_MIN) / CHUNK_DEG))   # 8
 W = NX * CHUNK_PX                     # 31185
 H = NY * CHUNK_PX                     # 11880
 RES = CHUNK_DEG / CHUNK_PX            # gradi/px
-OUT_DAT = os.path.join(DATA, "med_emodnet_150m.dat")
-OUT_META = os.path.join(DATA, "med_emodnet_150m.json")
+OUT_DAT = os.path.join(DATA, "med_emodnet_115m.dat")
+OUT_META = os.path.join(DATA, "med_emodnet_115m.json")
 WORKERS = 6
 
 

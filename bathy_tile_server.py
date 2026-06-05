@@ -27,21 +27,23 @@ import xarray as xr
 HERE = os.path.dirname(__file__)
 TILE_DIR = os.path.join(HERE, "tiles")
 CMEMS_NC = os.path.join(HERE, "data", "med_bathy.nc")
-STORE_DAT = os.path.join(HERE, "data", "med_emodnet_150m.dat")
-STORE_META = os.path.join(HERE, "data", "med_emodnet_150m.json")
+STORE_DAT = os.path.join(HERE, "data", "med_emodnet_115m.dat")
+STORE_META = os.path.join(HERE, "data", "med_emodnet_115m.json")
 PORT = int(os.environ.get("BATHY_TILE_PORT", "8097"))
 
 TILE = 512          # px del tile (supersample → nitido anche su display ad alta densità)
 PAD = 12            # margine px per continuità ombra tra tile
 SHADOW_OFF = 3
-SHADOW_BLUR = 2.6
-SHADOW_DARK = 0.42
+SHADOW_BLUR = 2.2
+SHADOW_DARK = 0.34
 
-DEPTH_LEVELS = np.array([0, 20, 50, 100, 200, 500, 1000, 2000, 3000, 6000], dtype=np.float32)
-DEPTH_COLORS = np.array([
-    (207, 234, 247), (169, 214, 236), (127, 189, 224), (85, 159, 208),
-    (53, 127, 190), (35, 95, 158), (22, 68, 125), (14, 47, 94), (8, 31, 68),
-], dtype=np.float32)
+# Bande FINI (21), fittissime sul basso fondale (0-100m, zona pesca) → max definizione.
+# Colori generati da una rampa blu (chiaro→navy) per avere tanti step morbidi e distinti.
+DEPTH_LEVELS = np.array([0, 5, 10, 15, 20, 30, 40, 50, 70, 100, 150, 200, 300, 400, 600, 800, 1200, 1700, 2300, 3000, 4000, 5500], dtype=np.float32)
+_ctrl_pos = np.array([0.0, 0.25, 0.5, 0.75, 1.0])
+_ctrl_rgb = np.array([[224, 242, 250], [130, 190, 228], [50, 120, 185], [18, 60, 115], [5, 18, 42]], dtype=np.float32)
+_t = np.linspace(0.0, 1.0, len(DEPTH_LEVELS) - 1)
+DEPTH_COLORS = np.stack([np.interp(_t, _ctrl_pos, _ctrl_rgb[:, i]) for i in range(3)], axis=1).astype(np.float32)
 
 # ── Store locale EMODnet (memmap, lazy) ──
 _store = None
@@ -150,15 +152,24 @@ def render_tile(z, x, y):
 
 
 class H(BaseHTTPRequestHandler):
+    protocol_version = "HTTP/1.1"   # keep-alive: il browser riusa la connessione → molto piu' veloce
+
     def log_message(self, *a):
         pass
 
     def _send(self, data, ctype="image/png"):
         self.send_response(200)
         self.send_header("Content-Type", ctype)
+        self.send_header("Content-Length", str(len(data)))
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Cache-Control", "public, max-age=604800")
         self.end_headers(); self.wfile.write(data)
+
+    def _empty(self, code):
+        self.send_response(code)
+        self.send_header("Content-Length", "0")
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.end_headers()
 
     def do_GET(self):
         path = self.path.split("?")[0]
@@ -169,7 +180,7 @@ class H(BaseHTTPRequestHandler):
             try:
                 z, x, y = int(parts[1]), int(parts[2]), int(parts[3][:-4])
             except ValueError:
-                self.send_response(400); self.end_headers(); return
+                self._empty(400); return
             cp = os.path.join(TILE_DIR, str(z), str(x), f"{y}.png")
             if os.path.exists(cp):
                 with open(cp, "rb") as f:
@@ -187,7 +198,7 @@ class H(BaseHTTPRequestHandler):
             except OSError:
                 pass
             self._send(data); return
-        self.send_response(404); self.end_headers()
+        self._empty(404)
 
 
 if __name__ == "__main__":
