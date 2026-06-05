@@ -119,6 +119,24 @@ PAPERCUT_DARK = 0.35        # intensità 0-1 (quanto scurisce la banda sottostan
 SUPERSAMPLE = 2   # AA leggero (anti-scaletta) ma SENZA papercut → bordi lisci e non sfocati
 
 
+def save_quantized(img, out_path, colors=255):
+    """Salva un'immagine RGBA come PNG a PALETTE (mode P) con 1 indice riservato alla
+    trasparenza. Le onde sono ~16 colori LaMMA + i gradienti AA dei bordi: 255 colori
+    bastano a riprodurle IDENTICHE, ma il file pesa ~2.5× meno di un RGBA. Così si può
+    renderizzare a risoluzione doppia (6000px = molto più nitido a zoom alto) restando
+    leggeri come prima (~640 KB invece di ~1.7 MB a 6000px)."""
+    rgba = np.asarray(img.convert("RGBA"))
+    alpha = rgba[..., 3]
+    pal = Image.fromarray(rgba[..., :3], "RGB").quantize(colors=colors)
+    idx = np.array(pal, dtype=np.uint8)
+    idx[alpha < 128] = colors                              # land/NaN → indice trasparente
+    out = Image.fromarray(idx, "P")
+    out.putpalette(pal.getpalette()[: colors * 3] + [0, 0, 0])
+    out.info["transparency"] = colors
+    out.save(out_path, optimize=True)
+    return os.path.getsize(out_path)
+
+
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--hours", type=int, default=72, help="Numero ore da renderizzare (1-72)")
@@ -262,8 +280,8 @@ def main():
             if incise and land_mask_arr is not None:
                 arr[..., 3][land_mask_arr > 127] = 0  # alpha=0 sulla terra
             img = Image.fromarray(arr)
-        img.save(out_path)  # salva SEMPRE la versione downscalata (anche senza post-process)
-        return os.path.getsize(out_path)
+        # Salva come PNG a palette (mode P) → ~2.5× più leggero, look identico.
+        return save_quantized(img, out_path)
 
     for i in range(hours_count):
         data_raw = ds.VHM0.isel(time=i).values  # (lat, lng)

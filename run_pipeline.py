@@ -41,7 +41,10 @@ def main():
     # 1) Download NetCDF (3 giorni = 72h di forecast)
     run(["download_cmems.py", "--days", "3"])
     # 2) Render PNG (full + eroded) + cache/waves_meta.json
-    run(["render_waves_png.py", "--hours", str(HOURS), "--width", "3000"])
+    #    Width 6000 (era 3000): cattura tutto il dettaglio del dato 4km upsamplato 4× →
+    #    a zoom alto si ingrandisce ~7× invece di ~13× = molto più nitido, stessa forma.
+    #    PNG a palette (save_quantized) → resta leggero (~640 KB/PNG, come prima a 3000px RGBA).
+    run(["render_waves_png.py", "--hours", str(HOURS), "--width", "6000"])
     # 3) Forecast JSON compatto (frecce direzione + popup), step 0.2°
     run(["extract_forecast.py", str(HOURS), os.path.join(CACHE, FORECAST_NAME), "--step", STEP])
 
