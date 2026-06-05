@@ -106,7 +106,7 @@ LAMMA_COLORS_RGB = [
 #    la banda più alta sembra "carta sopra" che proietta un'ombra su quella più bassa
 #    (luce da alto-sinistra). Look "carta a strati". Disattiva con PAPERCUT=False.
 #    Backup pre-papercut: render_waves_png.PREPAPERCUT.bak.py + cache/_prepapercut_backup/
-PAPERCUT = True
+PAPERCUT = False   # ombra bande disattivata sulle onde: a zoom alto l'alone (blur×13) le sfocava
 PAPERCUT_OFFSET_PX = 5      # spostamento ombra (giù-destra) in px PNG
 PAPERCUT_BLUR = 4.0         # morbidezza ombra (sigma gauss)
 PAPERCUT_DARK = 0.35        # intensità 0-1 (quanto scurisce la banda sottostante)
@@ -116,7 +116,7 @@ PAPERCUT_DARK = 0.35        # intensità 0-1 (quanto scurisce la banda sottostan
 #    "hard" 1px) → a zoom alto diventava una SCALETTA. Supersampling = AA reale.
 #    2 = buon compromesso qualità/tempo (render 4× i pixel). 3 = più liscio, più lento
 #    (render 9× i pixel = figura 9000px). Scelto 3 dall'utente per bordo max liscio.
-SUPERSAMPLE = 3
+SUPERSAMPLE = 1   # niente supersample/LANCZOS: bordi banda più netti (l'AA li ammorbidiva troppo a zoom alto)
 
 
 def main():
