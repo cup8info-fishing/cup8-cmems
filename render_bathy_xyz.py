@@ -66,11 +66,15 @@ def _render_one(args):
     if not sea[PAD:PAD + TILE, PAD:PAD + TILE].any():
         return 0
     band = np.clip(np.searchsorted(DEPTH_LEVELS, depth, side="right") - 1, 0, len(DEPTH_LEVELS) - 2).astype(np.int16)
-    rgb = DEPTH_COLORS[band]
+    rgb = DEPTH_COLORS[band].astype(np.float32)
+    # Ombra papercut NETTA (offset giù-destra, blur minimo) → dà profondità SENZA sfocare.
     off = 2
     upleft = np.roll(np.roll(band, off, 0), off, 1)
-    shadow = np.clip(ndimage.gaussian_filter((upleft < band).astype(np.float32), 1.6), 0, 1) * 0.34
+    shadow = np.clip(ndimage.gaussian_filter((upleft < band).astype(np.float32), 0.5), 0, 1) * 0.30
     rgb = rgb * (1.0 - shadow[..., None])
+    # Linea di contorno NITIDA (1px) a ogni cambio di fascia → confini definiti "carta nautica".
+    edge = (band != np.roll(band, 1, 0)) | (band != np.roll(band, 1, 1))
+    rgb[edge] *= 0.62
     alpha = np.where(sea, 235, 0).astype(np.uint8)
     out_arr = np.dstack([np.clip(rgb, 0, 255).astype(np.uint8), alpha])
     crop = out_arr[PAD:PAD + TILE, PAD:PAD + TILE]
