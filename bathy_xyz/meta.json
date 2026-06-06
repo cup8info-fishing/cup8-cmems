@@ -1,0 +1,12 @@
+{
+  "zmin": 5,
+  "zmax": 10,
+  "bbox": {
+    "lat_min": 30.0,
+    "lat_max": 46.0,
+    "lng_min": -6.0,
+    "lng_max": 36.0
+  },
+  "tile": 256,
+  "projection": "EPSG:3857 XYZ"
+}

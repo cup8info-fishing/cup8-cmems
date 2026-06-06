@@ -64,8 +64,10 @@ def main():
                 shutil.copyfile(src, os.path.join(dest, f"h{i:02d}.png"))
                 n += 1
 
-    # 5) Batimetria: tile statici pre-renderizzati (committati in bathy_tiles/) → public/bathy/
-    bathy_src = os.path.join(HERE, "bathy_tiles")
+    # 5) Batimetria: tile statici XYZ Web Mercator (committati in bathy_xyz/, lo SCHEMA
+    #    che usa L.tileLayer dell'app) → public/bathy/. Servite dal CDN così NON pesano
+    #    nel bundle app. (Le vecchie bathy_tiles erano WGS84-quad, schema sbagliato per l'app.)
+    bathy_src = os.path.join(HERE, "bathy_xyz")
     if os.path.isdir(bathy_src):
         bathy_dst = os.path.join(HERE, "public", "bathy")
         if os.path.isdir(bathy_dst):
