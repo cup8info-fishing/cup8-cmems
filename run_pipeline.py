@@ -26,6 +26,7 @@ PUBLIC = os.path.join(HERE, "public", "waves")
 HOURS = 72
 STEP = "0.2"
 FORECAST_NAME = "forecast_72h_0p2.json"
+CURRENTS_NAME = "currents_72h_0p2.json"
 
 
 def run(args):
@@ -38,8 +39,10 @@ def run(args):
 def main():
     os.makedirs(CACHE, exist_ok=True)
 
-    # 1) Download NetCDF (3 giorni = 72h di forecast)
+    # 1) Download NetCDF onde (3 giorni = 72h di forecast)
     run(["download_cmems.py", "--days", "3"])
+    # 1b) Download NetCDF CORRENTI (uo/vo, stesso modello fisico 4km)
+    run(["download_currents.py", "--days", "3"])
     # 2) Render PNG (full + eroded) + cache/waves_meta.json
     #    Width 6000 (era 3000): cattura tutto il dettaglio del dato 4km upsamplato 4× →
     #    a zoom alto si ingrandisce ~7× invece di ~13× = molto più nitido, stessa forma.
@@ -47,6 +50,8 @@ def main():
     run(["render_waves_png.py", "--hours", str(HOURS), "--width", "6000"])
     # 3) Forecast JSON compatto (frecce direzione + popup), step 0.2°
     run(["extract_forecast.py", str(HOURS), os.path.join(CACHE, FORECAST_NAME), "--step", STEP])
+    # 3b) Correnti JSON (u/v per punto) per il flusso animato delle correnti
+    run(["extract_currents.py", str(HOURS), os.path.join(CACHE, CURRENTS_NAME), "--step", STEP])
 
     # 4) Componi il sito statico public/waves/
     full = os.path.join(PUBLIC, "full")
@@ -55,6 +60,10 @@ def main():
         os.makedirs(d, exist_ok=True)
     shutil.copyfile(os.path.join(CACHE, "waves_meta.json"), os.path.join(PUBLIC, "meta.json"))
     shutil.copyfile(os.path.join(CACHE, FORECAST_NAME), os.path.join(PUBLIC, FORECAST_NAME))
+    cur_src = os.path.join(CACHE, CURRENTS_NAME)
+    if os.path.exists(cur_src):
+        shutil.copyfile(cur_src, os.path.join(PUBLIC, CURRENTS_NAME))
+        print(f"OK: public/waves/{CURRENTS_NAME} pronto (correnti)", flush=True)
 
     n = 0
     for i in range(HOURS):
