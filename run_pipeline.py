@@ -36,6 +36,17 @@ def run(args):
         sys.exit(f"FAILED ({r.returncode}): {' '.join(args)}")
 
 
+def run_soft(args):
+    """Come run() ma NON-FATALE: se fallisce logga e prosegue. Per gli step ADDITIVI
+    (es. SST): un intoppo transitorio su SST non deve buttare giù onde/correnti/bathy."""
+    print("→ python", *args, "(best-effort)", flush=True)
+    r = subprocess.run([PY] + args, cwd=HERE)
+    if r.returncode != 0:
+        print(f"⚠ STEP NON-FATALE fallito ({r.returncode}): {' '.join(args)} — proseguo senza.", flush=True)
+        return False
+    return True
+
+
 def main():
     os.makedirs(CACHE, exist_ok=True)
 
@@ -43,11 +54,17 @@ def main():
     run(["download_cmems.py", "--days", "3"])
     # 1b) Download NetCDF CORRENTI (uo/vo, stesso modello fisico 4km)
     run(["download_currents.py", "--days", "3"])
+    # 1c) Download NetCDF SST (thetao 2D, stesso modello fisico 4km) — ADDITIVO/best-effort
+    sst_ok = run_soft(["download_sst.py", "--days", "3"])
     # 2) Render PNG (full + eroded) + cache/waves_meta.json
     #    Width 6000 (era 3000): cattura tutto il dettaglio del dato 4km upsamplato 4× →
     #    a zoom alto si ingrandisce ~7× invece di ~13× = molto più nitido, stessa forma.
     #    PNG a palette (save_quantized) → resta leggero (~640 KB/PNG, come prima a 3000px RGBA).
     run(["render_waves_png.py", "--hours", str(HOURS), "--width", "6000"])
+    # 2b) Render SST PNG (heatmap temperatura + FRONTI termici) — ADDITIVO/best-effort.
+    #     Stessa pipeline soft delle onde, width 6000, palette PNG leggera.
+    if sst_ok:
+        sst_ok = run_soft(["render_sst_png.py", "--hours", str(HOURS), "--width", "6000"])
     # 3) Forecast JSON compatto (frecce direzione + popup), step 0.2°
     run(["extract_forecast.py", str(HOURS), os.path.join(CACHE, FORECAST_NAME), "--step", STEP])
     # 3b) Correnti JSON (u/v per punto) per il flusso animato delle correnti
@@ -72,6 +89,28 @@ def main():
             if os.path.exists(src):
                 shutil.copyfile(src, os.path.join(dest, f"h{i:02d}.png"))
                 n += 1
+
+    # 4b) Componi il sito statico public/sst/ (heatmap temperatura + fronti termici).
+    #     Stesso layout delle onde: meta.json + full/h{NN}.png + eroded/h{NN}.png.
+    #     Best-effort: se SST non c'è (download/render falliti), pubblico solo onde/correnti.
+    sst_meta_src = os.path.join(CACHE, "sst_meta.json")
+    if sst_ok and os.path.exists(sst_meta_src):
+        sst_pub = os.path.join(HERE, "public", "sst")
+        sst_full = os.path.join(sst_pub, "full")
+        sst_eroded = os.path.join(sst_pub, "eroded")
+        for d in (sst_full, sst_eroded):
+            os.makedirs(d, exist_ok=True)
+        shutil.copyfile(sst_meta_src, os.path.join(sst_pub, "meta.json"))
+        ns = 0
+        for i in range(HOURS):
+            for suffix, dest in (("", sst_full), ("_eroded", sst_eroded)):
+                src = os.path.join(CACHE, f"sst_h{i:02d}{suffix}.png")
+                if os.path.exists(src):
+                    shutil.copyfile(src, os.path.join(dest, f"h{i:02d}.png"))
+                    ns += 1
+        print(f"OK: public/sst pronta — {ns} PNG + meta.json (SST + fronti termici)", flush=True)
+    else:
+        print("⚠ SST saltato (download/render non riusciti) — pubblico solo onde/correnti.", flush=True)
 
     # 5) Batimetria: tile statici XYZ Web Mercator (committati in bathy_xyz/, lo SCHEMA
     #    che usa L.tileLayer dell'app) → public/bathy/. Servite dal CDN così NON pesano
