@@ -22,7 +22,9 @@ concurrency:
 jobs:
   render:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    # 75 min (era 45): la pipeline ora fa 3 dataset (onde+correnti+SST) e 3 render.
+    # I download Copernicus possono essere lenti (fino a 3×600s/ciascuno) → serve margine.
+    timeout-minutes: 75
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}

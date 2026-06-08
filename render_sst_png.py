@@ -67,11 +67,11 @@ FRONT_ENABLE = True
 FRONT_PERCENTILE = 90        # solo il top ~10% dei gradienti = fronte
 FRONT_MIN_GRAD = 0.05        # °C/km: soglia fisica minima (sotto = mare "uniforme", niente fronte)
 FRONT_SOFT = 0.5             # ampiezza smoothstep sopra soglia (basso = cresta più decisa)
-FRONT_THICKEN = 3            # px: ispessisce la nervatura del fronte (max_filter) così si vede
+FRONT_THICKEN = 4            # px: ispessisce la nervatura del fronte (max_filter) così si vede
 FRONT_FIELD_BLUR = 0.5       # morbidezza del campo-fronte (px griglia dati)
 FRONT_EROSION = 2            # px erosione maschera mare (niente fronti fittizi lungo la costa)
 FRONT_COLOR = (255, 255, 255)  # colore cresta del fronte
-FRONT_CASING_BLUR = 2.4      # alone scuro: morbidezza (px immagine) — largo = stacca bene
+FRONT_CASING_BLUR = 3.2      # alone scuro: morbidezza (px immagine) — largo = stacca bene
 FRONT_CASING_DARK = 0.55     # alone scuro: intensità 0-1 (forte = la cresta bianca "spicca")
 
 # ── ANTI-ALIASING bordi banda: render a SUPERSAMPLE× poi downscale LANCZOS (vedi onde). ──
@@ -207,7 +207,7 @@ def main():
     dy_km = 111.195 * dlat_deg
     dx_km = np.maximum(111.195 * dlon_deg * np.cos(np.radians(lats_us)), 1e-3)  # per riga
 
-    def render_one(out_path, data, front, incise=False):
+    def render_one(out_path, data, front_a, front_casing, incise=False):
         # Figure SENZA padding/assi — render a SUPERSAMPLE× poi LANCZOS (AA bordi banda).
         fig = plt.figure(figsize=(width / 100, height / 100), dpi=100 * SUPERSAMPLE, frameon=False)
         ax = fig.add_axes([0, 0, 1, 1])
@@ -230,20 +230,18 @@ def main():
         if img.size != (width, height):
             img = img.resize((width, height), Image.LANCZOS)
 
-        do_front = FRONT_ENABLE and front is not None
+        # front_a / front_casing sono già in spazio immagine (precalcolati 1 volta per ora,
+        # riusati da full+eroded → niente map_coordinates/gaussian ripetuti = render molto più veloce).
+        do_front = FRONT_ENABLE and front_a is not None
         do_incise = incise and land_mask_arr is not None
         if do_front or do_incise:
-            from scipy import ndimage as _ndi
             arr = np.array(img)
             if do_front:
-                # Campo-fronte (0-1) ricampionato in spazio immagine, stessa proiezione
-                fimg = _ndi.map_coordinates(front, [pc_rows, pc_cols], order=1, mode="nearest")
-                a = np.clip(fimg, 0.0, 1.0)
-                casing = np.clip(_ndi.gaussian_filter(a, FRONT_CASING_BLUR), 0.0, 1.0)
+                a = front_a
                 rgb = arr[..., :3].astype(np.float32)
-                rgb *= (1.0 - FRONT_CASING_DARK * casing[..., None])     # alone scuro = stacca il fronte
+                rgb *= (1.0 - FRONT_CASING_DARK * front_casing[..., None])  # alone scuro = stacca il fronte
                 fc = np.array(FRONT_COLOR, dtype=np.float32)
-                rgb = rgb * (1.0 - a[..., None]) + fc * a[..., None]      # cresta luminosa nitida
+                rgb = rgb * (1.0 - a[..., None]) + fc * a[..., None]        # cresta luminosa nitida
                 arr[..., :3] = np.clip(rgb, 0, 255).astype(np.uint8)
             if do_incise:
                 arr[..., 3][land_mask_arr > 127] = 0   # alpha=0 sulla terra (Satellite)
@@ -313,10 +311,19 @@ def main():
         # Clip al range di scala SOLO per il render (i fronti sono già calcolati sul dato reale)
         data_disp = np.clip(data_filled, TEMP_LEVELS[0] + 1e-6, TEMP_LEVELS[-1] - 1e-6)
 
+        # Fronti in spazio immagine: calcolati UNA volta per ora (map_coordinates + gaussian
+        # sull'immagine sono costosi → non ripeterli per full E eroded). Riusati da entrambi.
+        front_a = front_casing = None
+        if FRONT_ENABLE and front is not None:
+            from scipy import ndimage as _ndi
+            fimg = _ndi.map_coordinates(front, [pc_rows, pc_cols], order=1, mode="nearest")
+            front_a = np.clip(fimg, 0.0, 1.0)
+            front_casing = np.clip(_ndi.gaussian_filter(front_a, FRONT_CASING_BLUR), 0.0, 1.0)
+
         out_full = os.path.join(CACHE_DIR, f"sst_h{i:02d}.png")
         out_eroded = os.path.join(CACHE_DIR, f"sst_h{i:02d}_eroded.png")
-        render_one(out_full, data_disp, front, incise=False)
-        render_one(out_eroded, data_disp, front, incise=True)
+        render_one(out_full, data_disp, front_a, front_casing, incise=False)
+        render_one(out_eroded, data_disp, front_a, front_casing, incise=True)
         hour_strs.append(time_iso)
 
     # Metadata per il frontend (mirror waves_meta + range termico per la legenda)
