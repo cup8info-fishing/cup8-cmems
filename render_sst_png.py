@@ -92,8 +92,9 @@ FRONT_COLOR = (255, 255, 255)  # colore cresta del fronte
 FRONT_CASING_BLUR = 3.2      # alone scuro: morbidezza (px immagine) — largo = stacca bene
 FRONT_CASING_DARK = 0.55     # alone scuro: intensità 0-1 (forte = la cresta bianca "spicca")
 
-# ── ANTI-ALIASING bordi banda: render a SUPERSAMPLE× poi downscale LANCZOS (vedi onde). ──
-SUPERSAMPLE = 2
+# SST: bordi NETTI (no supersample/LANCZOS): la SST vuole zone DEFINITE, non sfumate come
+# le onde. SUPERSAMPLE=1 + contourf antialiased=False → confini banda crisp.
+SUPERSAMPLE = 1
 
 
 def build_land_mask(width, height, x_min_merc, x_max_merc, y_min_merc, y_max_merc):
@@ -238,7 +239,7 @@ def main():
             cmap=cmap,
             norm=norm,
             extend="neither",   # dato già clippato nel range → niente buchi trasparenti
-            antialiased=True,
+            antialiased=False,  # bordi banda NETTI (zone di temperatura definite)
             corner_mask=False,
         )
         fig.savefig(out_path, dpi=100 * SUPERSAMPLE, transparent=True, pad_inches=0, bbox_inches=None)
