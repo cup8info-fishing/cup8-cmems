@@ -43,19 +43,35 @@ LAND_GEOJSON = os.environ.get("CUP8_LAND_GEOJSON") or next(
 # bene l'estate mediterranea (giugno ~18-28 °C) con un filo di margine. Il dato fuori
 # range viene "clippato" agli estremi PRIMA del render (niente buchi trasparenti),
 # ma i FRONTI sono calcolati sul dato reale non clippato. Range tarabile per stagione.
-TEMP_MIN = 15.0
-TEMP_MAX = 29.0
+TEMP_MIN = 16.0
+TEMP_MAX = 28.0
 TEMP_STEP = 0.5
 TEMP_LEVELS = list(np.round(np.arange(TEMP_MIN, TEMP_MAX + 1e-6, TEMP_STEP), 2))
 
 def _build_thermal_ramp(n):
-    """n colori RGB 0-255 da una colormap percettiva (turbo: blu→ciano→verde→giallo→rosso)."""
-    try:
-        base = matplotlib.colormaps["turbo"]
-    except Exception:  # matplotlib vecchio
-        import matplotlib.cm as _cm
-        base = _cm.get_cmap("turbo")
-    return [tuple(int(round(c * 255)) for c in base(k / max(1, n - 1))[:3]) for k in range(n)]
+    """n colori RGB 0-255 da una palette SST RAFFINATA (NON neon): blu profondo (freddo) →
+    blu → teal → verde-mare → sabbia → arancio → terracotta (caldo). Tinte desaturate =
+    professionale e LEGGIBILE (il turbo rainbow era psichedelico)."""
+    anchors = [
+        (0.00, (38, 92, 150)),    # blu profondo (freddo)
+        (0.22, (64, 140, 186)),   # blu
+        (0.43, (96, 186, 188)),   # teal
+        (0.60, (158, 206, 170)),  # verde-mare (medio)
+        (0.75, (232, 184, 104)),  # sabbia
+        (0.87, (224, 132, 78)),   # arancio
+        (1.00, (190, 78, 60)),    # terracotta (caldo)
+    ]
+    out = []
+    for k in range(n):
+        t = k / max(1, n - 1)
+        for i in range(1, len(anchors)):
+            if t <= anchors[i][0] or i == len(anchors) - 1:
+                t0, c0 = anchors[i - 1]; t1, c1 = anchors[i]
+                f = (t - t0) / (t1 - t0) if t1 > t0 else 0.0
+                f = max(0.0, min(1.0, f))
+                out.append(tuple(int(round(c0[j] + (c1[j] - c0[j]) * f)) for j in range(3)))
+                break
+    return out
 
 SST_COLORS_RGB = _build_thermal_ramp(len(TEMP_LEVELS) - 1)  # N livelli → N-1 colori
 
@@ -63,7 +79,9 @@ SST_COLORS_RGB = _build_thermal_ramp(len(TEMP_LEVELS) - 1)  # N livelli → N-1 
 # |∇SST| in °C/km sul campo liscio; soglia ADATTIVA (top ~8% dei gradienti) con un
 # pavimento FISICO (frame piatto → nessun fronte fittizio). I fronti si disegnano come
 # cresta luminosa + alone scuro morbido per staccarli dalla heatmap, su ENTRAMBE le PNG.
-FRONT_ENABLE = True
+FRONT_ENABLE = False         # fronti DISATTIVATI: il groviglio di linee bianche rendeva la
+                             # mappa illeggibile. La temperatura si legge dai colori; i fronti
+                             # (confini caldo/freddo) si vedono dove il colore cambia in fretta.
 FRONT_PERCENTILE = 90        # solo il top ~10% dei gradienti = fronte
 FRONT_MIN_GRAD = 0.05        # °C/km: soglia fisica minima (sotto = mare "uniforme", niente fronte)
 FRONT_SOFT = 0.5             # ampiezza smoothstep sopra soglia (basso = cresta più decisa)
