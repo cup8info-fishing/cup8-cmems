@@ -45,7 +45,7 @@ LAND_GEOJSON = os.environ.get("CUP8_LAND_GEOJSON") or next(
 # ma i FRONTI sono calcolati sul dato reale non clippato. Range tarabile per stagione.
 TEMP_MIN = 16.0
 TEMP_MAX = 28.0
-TEMP_STEP = 0.5
+TEMP_STEP = 1.0   # bande da 1°C = zone di temperatura NETTE e leggibili (non un blur)
 TEMP_LEVELS = list(np.round(np.arange(TEMP_MIN, TEMP_MAX + 1e-6, TEMP_STEP), 2))
 
 def _build_thermal_ramp(n):
@@ -292,8 +292,8 @@ def main():
                 data_up = ndimage.zoom(_data_nn, 4, order=3)
                 data_up = np.clip(data_up, _vmin, _vmax)
                 sea_up = ndimage.zoom(sea.astype(float), 4, order=1) > 0.5
-                num = ndimage.gaussian_filter(np.where(sea_up, data_up, 0.0), sigma=1.5)
-                den = ndimage.gaussian_filter(sea_up.astype(float), sigma=1.5)
+                num = ndimage.gaussian_filter(np.where(sea_up, data_up, 0.0), sigma=0.9)
+                den = ndimage.gaussian_filter(sea_up.astype(float), sigma=0.9)
                 blurred = np.where(den > 1e-6, num / np.maximum(den, 1e-9), np.nan)
                 blurred = np.where(sea_up, blurred, np.nan)
                 # Oltre costa: media locale (per SST va bene la media, non il massimo come onde)
