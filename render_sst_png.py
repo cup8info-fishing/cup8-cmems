@@ -169,6 +169,28 @@ def main():
     total_hours = ds.sizes["time"]
     hours_count = min(args.hours, total_hours)
 
+    # ── SCALA ADATTIVA (soluzione garbata): il range colore = percentili robusti del dato
+    #    (tutte le ore) → la palette blu→rosso copre SEMPRE il range reale del giorno. Niente
+    #    "tutto teal" né taratura fissa sbagliata per stagione. Sempre leggibile e bilanciata.
+    _t = ds.thetao
+    if "depth" in _t.dims:
+        _t = _t.isel(depth=0)
+    _arr = _t.isel(time=slice(0, hours_count)).values.astype("float32")
+    if np.isfinite(_arr).any() and np.nanmax(_arr) > 100:   # difensivo Kelvin
+        _arr = _arr - 273.15
+    _fin = _arr[np.isfinite(_arr)]
+    _lo = float(np.percentile(_fin, 2)); _hi = float(np.percentile(_fin, 98))
+    vmin = float(np.floor(_lo)); vmax = float(np.ceil(_hi))
+    if vmax - vmin < 6:                       # span minimo: non comprimere troppo i colori
+        _mid = (vmin + vmax) / 2.0; vmin = round(_mid - 3); vmax = round(_mid + 3)
+    vmin = max(8.0, vmin); vmax = min(32.0, vmax)
+    step = 1.0 if (vmax - vmin) <= 13 else 2.0
+    levels = list(np.round(np.arange(vmin, vmax + 1e-6, step), 2))
+    if len(levels) < 3:
+        levels = [vmin, (vmin + vmax) / 2.0, vmax]
+    colors_rgb = _build_thermal_ramp(len(levels) - 1)
+    print(f"[render-sst] scala ADATTIVA {vmin:.0f}-{vmax:.0f}°C (p2={_lo:.1f} p98={_hi:.1f}) — {len(levels)-1} bande", flush=True)
+
     lats = ds.latitude.values   # ascending
     lngs = ds.longitude.values  # ascending
     # PNG su TUTTO il Mediterraneo (bbox = dati interi) → al minimo zoom non si vede mai
@@ -196,12 +218,12 @@ def main():
 
     # Colormap discreta termica + BoundaryNorm = bande di colore solide (no interpolazione),
     # poi smussate dall'upsample/blur/supersample → look "soft" identico alle onde.
-    cmap = ListedColormap([(r / 255, g / 255, b / 255) for r, g, b in SST_COLORS_RGB])
+    cmap = ListedColormap([(r / 255, g / 255, b / 255) for r, g, b in colors_rgb])
     cmap.set_bad(alpha=0)  # NaN = trasparente
-    norm = BoundaryNorm(TEMP_LEVELS, cmap.N)
+    norm = BoundaryNorm(levels, cmap.N)
 
     hour_strs = []
-    print(f"[render-sst] {hours_count} ore × {width}×{height}px, scala {TEMP_MIN}-{TEMP_MAX}°C, output → {CACHE_DIR}")
+    print(f"[render-sst] {hours_count} ore × {width}×{height}px, scala {vmin:.0f}-{vmax:.0f}°C, output → {CACHE_DIR}")
 
     # Maschera terra rasterizzata UNA volta (ISTAT 1:50000) → incisa nella variante eroded
     land_mask = build_land_mask(width, height, x_min_merc, x_max_merc, y_min_merc, y_max_merc)
@@ -235,7 +257,7 @@ def main():
         ax.set_ylim(y_min_merc, y_max_merc)
         ax.contourf(
             lngs_rad, lats_merc, data,
-            levels=TEMP_LEVELS,
+            levels=levels,
             cmap=cmap,
             norm=norm,
             extend="neither",   # dato già clippato nel range → niente buchi trasparenti
@@ -283,7 +305,7 @@ def main():
 
             sea = ~np.isnan(data_raw)
             if not sea.any():
-                data_filled = np.full((len(lats) * 4, len(lngs) * 4), TEMP_MIN)
+                data_filled = np.full((len(lats) * 4, len(lngs) * 4), vmin)
             else:
                 # Stessa pipeline ANTI-ALONE delle onde: riempi terra col mare più vicino,
                 # upsample cubico 4×, blur NaN-aware, estensione oltre costa, riempi residui.
@@ -328,7 +350,7 @@ def main():
             data_filled = data_raw
 
         # Clip al range di scala SOLO per il render (i fronti sono già calcolati sul dato reale)
-        data_disp = np.clip(data_filled, TEMP_LEVELS[0] + 1e-6, TEMP_LEVELS[-1] - 1e-6)
+        data_disp = np.clip(data_filled, levels[0] + 1e-6, levels[-1] - 1e-6)
 
         # Fronti in spazio immagine: calcolati UNA volta per ora (map_coordinates + gaussian
         # sull'immagine sono costosi → non ripeterli per full E eroded). Riusati da entrambi.
@@ -354,8 +376,8 @@ def main():
         "width": width,
         "height": height,
         "dataset": "cmems_mod_med_phy-tem_anfc_4.2km-2D_PT1H-m",
-        "temp_min": TEMP_MIN,
-        "temp_max": TEMP_MAX,
+        "temp_min": vmin,
+        "temp_max": vmax,
         "fronts": FRONT_ENABLE,
         "render_ts": int(time.time()),
     }
