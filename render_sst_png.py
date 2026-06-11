@@ -4,7 +4,10 @@ render_sst_png.py — Renderizza PNG di TEMPERATURA SUPERFICIALE del mare (SST) 
 Clone di render_waves_png.py: stessa pipeline "soft" (proiezione Web Mercator, upsample
 cubico 4×, blur NaN-aware, supersample+LANCZOS, palette PNG) ma:
   - dato = thetao (°C) invece di VHM0 (m)
-  - scala colori TERMICA (turbo: blu freddo → rosso caldo), range fisso 15-29 °C
+  - scala colori TERMICA ADATTIVA (blu profondo freddo → terracotta caldo): range calcolato
+    per render dai percentili p2/p98 del dato reale → la palette si "apre" sull'intervallo
+    realmente presente (niente clumping su un range fisso troppo largo). Min/max scritti nel
+    meta JSON per la legenda del frontend.
   - FRONTI TERMICI incisi nella PNG: dove |∇SST| è alta (confine caldo/freddo) si disegna
     un bordo luminoso. Lì si radunano i pelagici (tonni, lampughe).
 
@@ -37,16 +40,12 @@ LAND_GEOJSON = os.environ.get("CUP8_LAND_GEOJSON") or next(
     os.path.join(os.path.dirname(__file__), "med-land-merged.geojson"),
 )
 
-# ── SCALA TERMICA ──────────────────────────────────────────────────────────────
-# Range FISSO (tutte le ore con la stessa scala → il colore di una temperatura NON
-# cambia frame-to-frame e il riscaldamento del forecast è leggibile). 15-29 °C copre
-# bene l'estate mediterranea (giugno ~18-28 °C) con un filo di margine. Il dato fuori
-# range viene "clippato" agli estremi PRIMA del render (niente buchi trasparenti),
-# ma i FRONTI sono calcolati sul dato reale non clippato. Range tarabile per stagione.
-TEMP_MIN = 16.0
-TEMP_MAX = 28.0
-TEMP_STEP = 1.0   # bande da 1°C = zone di temperatura NETTE e leggibili (non un blur)
-TEMP_LEVELS = list(np.round(np.arange(TEMP_MIN, TEMP_MAX + 1e-6, TEMP_STEP), 2))
+# ── SCALA TERMICA ADATTIVA ───────────────────────────────────────────────────────
+# Il range (vmin/vmax) NON è fisso: si calcola per render dai percentili p2/p98 del dato
+# reale (vedi pipeline più sotto), così la palette si "apre" sull'intervallo davvero
+# presente invece di schiacciarsi su un range fisso troppo largo (es. tutto blu se il
+# mare è freddo). Bande da 1-2°C → zone NETTE e leggibili (non un blur). I FRONTI sono
+# calcolati sul dato reale non clippato. La rampa colori la costruisce _build_thermal_ramp.
 
 def _build_thermal_ramp(n):
     """n colori RGB 0-255 da una palette SST RAFFINATA (NON neon): blu profondo (freddo) →
@@ -72,8 +71,6 @@ def _build_thermal_ramp(n):
                 out.append(tuple(int(round(c0[j] + (c1[j] - c0[j]) * f)) for j in range(3)))
                 break
     return out
-
-SST_COLORS_RGB = _build_thermal_ramp(len(TEMP_LEVELS) - 1)  # N livelli → N-1 colori
 
 # ── FRONTI TERMICI ─────────────────────────────────────────────────────────────
 # |∇SST| in °C/km sul campo liscio; soglia ADATTIVA (top ~8% dei gradienti) con un
