@@ -96,12 +96,12 @@ def main():
     #    a zoom alto si ingrandisce ~7× invece di ~13× = molto più nitido, stessa forma.
     #    PNG a palette (save_quantized) → resta leggero (~640 KB/PNG, come prima a 3000px RGBA).
     run(["render_waves_png.py", "--hours", str(HOURS), "--width", "6000"])
-    # 2b) Render SST PNG (heatmap temperatura + FRONTI termici) — ADDITIVO/best-effort.
-    #     Width 3000 (NON 6000 come le onde): la temperatura è liscia e i fronti sono
-    #     feature da km → 3000 basta ed è ~4× più veloce sul composito fronti (altrimenti
-    #     il render SST sfora il timeout del job). Palette PNG leggera.
+    # 2b) Render SST PNG (heatmap temperatura) — ADDITIVO/best-effort.
+    #     Width 6000 (era 3000) come le onde: a 3000px (71 px/°) lo zoom dell'app ingrandiva
+    #     la PNG 5-10× → "molto sgranata". Coi FRONTI ormai disattivati il composito pesante
+    #     non gira più, quindi 6000 + supersample 2× sta nei tempi del job (come le onde).
     if sst_ok:
-        sst_ok = run_soft(["render_sst_png.py", "--hours", str(HOURS), "--width", "3000"])
+        sst_ok = run_soft(["render_sst_png.py", "--hours", str(HOURS), "--width", "6000"])
     # 3) Forecast JSON compatto (frecce direzione + popup), step 0.2°
     run(["extract_forecast.py", str(HOURS), os.path.join(CACHE, FORECAST_NAME), "--step", STEP])
     # 3b) Correnti JSON (u/v per punto) per il flusso animato delle correnti

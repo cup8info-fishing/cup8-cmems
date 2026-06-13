@@ -15,6 +15,10 @@ Uso: python render_daily_png.py --product {sst-uhr,chl,temp3d} [--width N]
 Output: cache/daily_<product>[_d{NN}].png (+ _eroded) + cache/daily_<product>_meta.json
 """
 import sys
+try:
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')  # Windows cp1252: i print con frecce/simboli non devono far crashare il render
+except Exception:
+    pass
 import os
 import json
 import time
@@ -38,14 +42,21 @@ LAND_GEOJSON = os.environ.get("CUP8_LAND_GEOJSON") or next(
     os.path.join(ROOT, "med-land-merged.geojson"),
 )
 
+# Width 4500 (era 3000) per chl/temp3d: a 3000px lo zoom dell'app ingrandiva la PNG 5-10×
+# → "sgranata". Sono snapshot giornalieri (1 PNG chl + ~14 temp3d), il costo CI è minimo.
 PRODUCTS = {
     "sst-uhr": {"nc": "daily_sst_uhr.nc", "var": "analysed_sst", "scale": "thermal",
                 "upsample": 1, "sigma": 0.6, "width": 4000, "dataset": "SST_MED_SST_L4_NRT_OBSERVATIONS_010_004_c_V2"},
     "chl":     {"nc": "daily_chl.nc", "var": "chl", "scale": "chl_log",
-                "upsample": 4, "sigma": 1.0, "width": 3000, "dataset": "cmems_mod_med_bgc-pft_anfc_4.2km_P1D-m"},
+                "upsample": 4, "sigma": 1.0, "width": 4500, "dataset": "cmems_mod_med_bgc-pft_anfc_4.2km_P1D-m"},
     "temp3d":  {"nc": "daily_temp3d.nc", "var": "thetao", "scale": "thermal",
-                "upsample": 4, "sigma": 0.9, "width": 3000, "dataset": "cmems_mod_med_phy-tem_anfc_4.2km_P1D-m"},
+                "upsample": 4, "sigma": 0.9, "width": 4500, "dataset": "cmems_mod_med_phy-tem_anfc_4.2km_P1D-m"},
 }
+
+# ANTI-SCALETTA (come render_sst_png): render a 2× + downscale LANCZOS → bordi banda con
+# ~1px di anti-aliasing. Senza, i confini netti (antialiased=False) diventavano scalette
+# giganti una volta ingranditi dallo zoom dell'app.
+SUPERSAMPLE = 2
 
 
 def thermal_ramp(n):
@@ -289,12 +300,12 @@ def main():
             data = data[::-1, :]   # contourf vuole lat ascendente come lats_us
         filled = fill_and_smooth(data, up, cfg["sigma"])
         disp = np.clip(filled, levels[0] + 1e-9, levels[-1] - 1e-9)
-        fig = plt.figure(figsize=(width / 100, height / 100), dpi=100, frameon=False)
+        fig = plt.figure(figsize=(width / 100, height / 100), dpi=100 * SUPERSAMPLE, frameon=False)
         ax = fig.add_axes([0, 0, 1, 1]); ax.set_axis_off()
         ax.set_xlim(x_min, x_max); ax.set_ylim(y_min, y_max)
         ax.contourf(lngs_rad, lats_merc, disp, levels=levels, cmap=cmap, norm=norm,
                     extend="neither", antialiased=(cfg["scale"] == "chl_log"), corner_mask=False)
-        fig.savefig(out_path, dpi=100, transparent=True, pad_inches=0)
+        fig.savefig(out_path, dpi=100 * SUPERSAMPLE, transparent=True, pad_inches=0)
         plt.close(fig)
         img = Image.open(out_path).convert("RGBA")
         if img.size != (width, height):
@@ -324,13 +335,13 @@ def main():
             depths_out.append(round(dval, 1))
         base_meta["depths"] = depths_out
         base_meta["levels_count"] = len(depths_out)
-        print(f"[{args.product}] ✓ {len(depths_out)} livelli profondità: {depths_out} m")
+        print(f"[{args.product}] OK {len(depths_out)} livelli profondità: {depths_out} m")
     else:
         field = transform(da.values)
         render_one(os.path.join(CACHE_DIR, f"daily_{args.product}.png"), field, incise=False)
         render_one(os.path.join(CACHE_DIR, f"daily_{args.product}_eroded.png"), field, incise=True)
         base_meta["levels_count"] = 1
-        print(f"[{args.product}] ✓ snapshot ({width}×{height}px)")
+        print(f"[{args.product}] OK snapshot ({width}×{height}px)")
 
     meta_path = os.path.join(CACHE_DIR, f"daily_{args.product}_meta.json")
     with open(meta_path, "w", encoding="utf-8") as f:
