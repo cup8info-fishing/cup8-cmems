@@ -48,9 +48,9 @@ PRODUCTS = {
     "sst-uhr": {"nc": "daily_sst_uhr.nc", "var": "analysed_sst", "scale": "thermal",
                 "upsample": 1, "sigma": 0.6, "width": 4000, "dataset": "SST_MED_SST_L4_NRT_OBSERVATIONS_010_004_c_V2"},
     "chl":     {"nc": "daily_chl.nc", "var": "chl", "scale": "chl_log",
-                "upsample": 4, "sigma": 1.0, "width": 4500, "dataset": "cmems_mod_med_bgc-pft_anfc_4.2km_P1D-m"},
+                "upsample": 4, "sigma": 1.0, "width": 6000, "dataset": "cmems_mod_med_bgc-pft_anfc_4.2km_P1D-m"},
     "temp3d":  {"nc": "daily_temp3d.nc", "var": "thetao", "scale": "thermal",
-                "upsample": 4, "sigma": 0.9, "width": 4500, "dataset": "cmems_mod_med_phy-tem_anfc_4.2km_P1D-m"},
+                "upsample": 4, "sigma": 0.9, "width": 6000, "dataset": "cmems_mod_med_phy-tem_anfc_4.2km_P1D-m"},
 }
 
 # ANTI-SCALETTA (come render_sst_png): render a 2× + downscale LANCZOS → bordi banda con
@@ -129,7 +129,8 @@ def build_land_mask(width, height, x_min, x_max, y_min, y_max):
 def save_quantized(img, out_path, colors=255):
     rgba = np.asarray(img.convert("RGBA"))
     alpha = rgba[..., 3]
-    pal = Image.fromarray(rgba[..., :3], "RGB").quantize(colors=colors)
+    # dither=NONE: niente Floyd-Steinberg (default PIL) → niente "pulviscolo" sgranato.
+    pal = Image.fromarray(rgba[..., :3], "RGB").quantize(colors=colors, dither=Image.Dither.NONE)
     idx = np.array(pal, dtype=np.uint8)
     idx[alpha < 128] = colors
     out = Image.fromarray(idx, "P")

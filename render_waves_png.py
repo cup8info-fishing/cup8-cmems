@@ -127,7 +127,8 @@ def save_quantized(img, out_path, colors=255):
     leggeri come prima (~640 KB invece di ~1.7 MB a 6000px)."""
     rgba = np.asarray(img.convert("RGBA"))
     alpha = rgba[..., 3]
-    pal = Image.fromarray(rgba[..., :3], "RGB").quantize(colors=colors)
+    # dither=NONE: niente Floyd-Steinberg (default PIL) → niente "pulviscolo" sgranato.
+    pal = Image.fromarray(rgba[..., :3], "RGB").quantize(colors=colors, dither=Image.Dither.NONE)
     idx = np.array(pal, dtype=np.uint8)
     idx[alpha < 128] = colors                              # land/NaN → indice trasparente
     out = Image.fromarray(idx, "P")
