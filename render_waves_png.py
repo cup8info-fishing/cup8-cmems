@@ -37,10 +37,18 @@ LAND_GEOJSON = os.environ.get("CUP8_LAND_GEOJSON") or next(
 )
 
 
+# Supersample della maschera terra: PIL draw.polygon NON antialiasa → bordo costa "duro"
+# (1px) che a zoom alto diventa una SCALETTA. Rasterizziamo a MASK_SS× e rimpiccioliamo
+# con LANCZOS → il bordo diventa un gradiente morbido 0..255 (anti-alias reale, bakeato
+# nella PNG: niente blur CSS, niente alone oltre la costa).
+MASK_SS = 2
+
+
 def build_land_mask(width, height, x_min_merc, x_max_merc, y_min_merc, y_max_merc):
-    """Rasterizza i polygons terra ISTAT in una maschera PIL (L mode).
-    Terra = 255, mare = 0. Coords in Web Mercator (radianti) come il contourf."""
-    mask = Image.new("L", (width, height), 0)
+    """Rasterizza i polygons terra ISTAT in una maschera PIL (L mode), ANTI-ALIASATA.
+    Terra = 255, mare = 0, transizione morbida sulla costa. Coords in Web Mercator."""
+    W, H = width * MASK_SS, height * MASK_SS
+    mask = Image.new("L", (W, H), 0)
     draw = ImageDraw.Draw(mask)
     try:
         with open(LAND_GEOJSON, "r", encoding="utf-8") as f:
@@ -55,8 +63,8 @@ def build_land_mask(width, height, x_min_merc, x_max_merc, y_min_merc, y_max_mer
     def project(lng, lat):
         xm = np.radians(lng)
         ym = lat_to_y(lat)
-        px = (xm - x_min_merc) / (x_max_merc - x_min_merc) * width
-        py = (y_max_merc - ym) / (y_max_merc - y_min_merc) * height
+        px = (xm - x_min_merc) / (x_max_merc - x_min_merc) * W
+        py = (y_max_merc - ym) / (y_max_merc - y_min_merc) * H
         return (px, py)
 
     def draw_ring(ring):
@@ -75,7 +83,8 @@ def build_land_mask(width, height, x_min_merc, x_max_merc, y_min_merc, y_max_mer
             for poly in g["coordinates"]:
                 for ring in poly:
                     draw_ring(ring)
-    return mask
+    # Downscale → bordo costa con gradiente AA (~MASK_SS px morbidi invece dello scalino).
+    return mask.resize((width, height), Image.LANCZOS)
 
 # Scala colori LaMMA (height in m → RGB)
 LAMMA_LEVELS = [0.0, 0.1, 0.3, 0.5, 0.8, 1.25, 1.6, 2.0, 2.5, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 12.0]
@@ -260,7 +269,11 @@ def main():
                 rgb = arr[..., :3].astype(np.float32) * (1.0 - shadow[..., None])
                 arr[..., :3] = np.clip(rgb, 0, 255).astype(np.uint8)
             if incise and land_mask_arr is not None:
-                arr[..., 3][land_mask_arr > 127] = 0  # alpha=0 sulla terra
+                # Incisione MORBIDA: alpha *= (1 - terra). 1 sul mare, 0 sulla terra, con la
+                # transizione AA della maschera sulla costa → bordo liscio (no scaletta) e
+                # senza sbordare oltre la riva (il gradiente è centrato sulla costa).
+                keep = 1.0 - (land_mask_arr.astype(np.float32) / 255.0)
+                arr[..., 3] = (arr[..., 3].astype(np.float32) * keep).astype(np.uint8)
             img = Image.fromarray(arr)
         img.save(out_path)  # salva SEMPRE la versione downscalata (anche senza post-process)
         return os.path.getsize(out_path)

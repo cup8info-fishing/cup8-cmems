@@ -41,7 +41,10 @@ def main():
     # 1) Download NetCDF (3 giorni = 72h di forecast)
     run(["download_cmems.py", "--days", "3"])
     # 2) Render PNG (full + eroded) + cache/waves_meta.json
-    run(["render_waves_png.py", "--hours", str(HOURS), "--width", "3000"])
+    # 6000px = quella attualmente deployata sul CDN (era 3000 qui → avrebbe regredito la
+    # risoluzione alla prossima rigenerazione). Con la maschera-costa anti-aliasata =
+    # bordi lisci. Se la CI va in timeout a 6000+SUPERSAMPLE=3, abbassare SUPERSAMPLE a 2.
+    run(["render_waves_png.py", "--hours", str(HOURS), "--width", "6000"])
     # 3) Forecast JSON compatto (frecce direzione + popup), step 0.2°
     run(["extract_forecast.py", str(HOURS), os.path.join(CACHE, FORECAST_NAME), "--step", STEP])
 
