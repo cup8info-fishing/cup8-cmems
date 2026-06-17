@@ -115,7 +115,7 @@ LAMMA_COLORS_RGB = [
 #    la banda più alta sembra "carta sopra" che proietta un'ombra su quella più bassa
 #    (luce da alto-sinistra). Look "carta a strati". Disattiva con PAPERCUT=False.
 #    Backup pre-papercut: render_waves_png.PREPAPERCUT.bak.py + cache/_prepapercut_backup/
-PAPERCUT = True
+PAPERCUT = False   # ombra bande disattivata sulle onde: a zoom alto l'alone (blur×13) le sfocava
 PAPERCUT_OFFSET_PX = 5      # spostamento ombra (giù-destra) in px PNG
 PAPERCUT_BLUR = 4.0         # morbidezza ombra (sigma gauss)
 PAPERCUT_DARK = 0.35        # intensità 0-1 (quanto scurisce la banda sottostante)
@@ -125,7 +125,26 @@ PAPERCUT_DARK = 0.35        # intensità 0-1 (quanto scurisce la banda sottostan
 #    "hard" 1px) → a zoom alto diventava una SCALETTA. Supersampling = AA reale.
 #    2 = buon compromesso qualità/tempo (render 4× i pixel). 3 = più liscio, più lento
 #    (render 9× i pixel = figura 9000px). Scelto 3 dall'utente per bordo max liscio.
-SUPERSAMPLE = 3
+SUPERSAMPLE = 2   # AA leggero (anti-scaletta) ma SENZA papercut → bordi lisci e non sfocati
+
+
+def save_quantized(img, out_path, colors=255):
+    """Salva un'immagine RGBA come PNG a PALETTE (mode P) con 1 indice riservato alla
+    trasparenza. Le onde sono ~16 colori LaMMA + i gradienti AA dei bordi: 255 colori
+    bastano a riprodurle IDENTICHE, ma il file pesa ~2.5× meno di un RGBA. Così si può
+    renderizzare a risoluzione doppia (6000px = molto più nitido a zoom alto) restando
+    leggeri come prima (~640 KB invece di ~1.7 MB a 6000px)."""
+    rgba = np.asarray(img.convert("RGBA"))
+    alpha = rgba[..., 3]
+    # dither=NONE: niente Floyd-Steinberg (default PIL) → niente "pulviscolo" sgranato.
+    pal = Image.fromarray(rgba[..., :3], "RGB").quantize(colors=colors, dither=Image.Dither.NONE)
+    idx = np.array(pal, dtype=np.uint8)
+    idx[alpha < 128] = colors                              # land/NaN → indice trasparente
+    out = Image.fromarray(idx, "P")
+    out.putpalette(pal.getpalette()[: colors * 3] + [0, 0, 0])
+    out.info["transparency"] = colors
+    out.save(out_path, optimize=True)
+    return os.path.getsize(out_path)
 
 
 def main():
@@ -275,8 +294,8 @@ def main():
                 keep = 1.0 - (land_mask_arr.astype(np.float32) / 255.0)
                 arr[..., 3] = (arr[..., 3].astype(np.float32) * keep).astype(np.uint8)
             img = Image.fromarray(arr)
-        img.save(out_path)  # salva SEMPRE la versione downscalata (anche senza post-process)
-        return os.path.getsize(out_path)
+        # Salva come PNG a palette (mode P) → ~2.5× più leggero, look identico.
+        return save_quantized(img, out_path)
 
     for i in range(hours_count):
         data_raw = ds.VHM0.isel(time=i).values  # (lat, lng)

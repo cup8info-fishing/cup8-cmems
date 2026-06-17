@@ -1,6 +1,7 @@
 node_modules/
 data/
 cache/
+tiles/
 public/
 *.nc
 .copernicusmarine*
