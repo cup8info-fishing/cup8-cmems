@@ -27,6 +27,8 @@ HOURS = 72
 STEP = "0.2"
 FORECAST_NAME = "forecast_72h_0p2.json"
 CURRENTS_NAME = "currents_72h_0p2.json"
+# Larghezza della variante leggera per i telefoni (vedi step 4a).
+SMALL_WIDTH = 2000
 
 
 def run(args):
@@ -126,6 +128,41 @@ def main():
             if os.path.exists(src):
                 shutil.copyfile(src, os.path.join(dest, f"h{i:02d}.png"))
                 n += 1
+
+    # 4a) Variante LEGGERA "eroded_s" per i telefoni (la usa il sito su touch).
+    #     Un frame 6000x2887 pesa ~0,5 MB in rete ma 66 MB DECODIFICATI in RAM:
+    #     tenendone in memoria piu' di uno, Safari iOS uccideva la pagina del sito.
+    #     A 2000px sono ~7 MB l'uno (9x meno) e restano nitidi alla scala a cui un
+    #     telefono mostra il Mediterraneo. Derivati per downscale LANCZOS dai PNG gia'
+    #     renderizzati (nessun re-render: costa secondi) e ri-quantizzati come gli
+    #     originali. Best-effort: se fallisce, il sito continua coi frame full res.
+    try:
+        from PIL import Image
+        from render_waves_png import save_quantized
+        small = os.path.join(PUBLIC, "eroded_s")
+        os.makedirs(small, exist_ok=True)
+        ns = 0
+        for i in range(HOURS):
+            src = os.path.join(eroded, f"h{i:02d}.png")
+            if not os.path.exists(src):
+                continue
+            im = Image.open(src).convert("RGBA")
+            if im.width > SMALL_WIDTH:
+                im = im.resize((SMALL_WIDTH, round(im.height * SMALL_WIDTH / im.width)), Image.LANCZOS)
+            save_quantized(im, os.path.join(small, f"h{i:02d}.png"))
+            ns += 1
+        # Annuncio la variante nel meta: il sito la usa SOLO se e' dichiarata qui, cosi'
+        # un render vecchio (senza eroded_s) resta compatibile.
+        import json
+        meta_pub = os.path.join(PUBLIC, "meta.json")
+        with open(meta_pub, encoding="utf-8") as f:
+            wmeta = json.load(f)
+        wmeta["small"] = {"dir": "eroded_s", "width": SMALL_WIDTH}
+        with open(meta_pub, "w", encoding="utf-8") as f:
+            json.dump(wmeta, f, indent=2)
+        print(f"OK: public/waves/eroded_s pronta — {ns} PNG a {SMALL_WIDTH}px (variante telefoni)", flush=True)
+    except Exception as e:
+        print(f"⚠ variante eroded_s non generata ({e}) — il sito usa i frame full res.", flush=True)
 
     # 4b) Componi il sito statico public/sst/ (heatmap temperatura + fronti termici).
     #     Stesso layout delle onde: meta.json + full/h{NN}.png + eroded/h{NN}.png.
