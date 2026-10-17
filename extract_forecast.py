@@ -47,7 +47,7 @@ def main():
     native_step = 0.041666
     factor = max(1, int(round(args.step / native_step)))
     if factor > 1:
-        sel = sel.coarsen(latitude=factor, longitude=factor, boundary="trim").mean(skipna=True)
+        sel = sel.coarsen(latitude=factor, longitude=factor, boundary="trim").mean()   # xarray nuovo: coarsen().mean() non accetta skipna (salta i NaN da sé)
 
     lats = sel.latitude.values
     lngs = sel.longitude.values
