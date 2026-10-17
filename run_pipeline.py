@@ -208,6 +208,22 @@ def main():
         nb = sum(len(fs) for _, _, fs in os.walk(bathy_dst))
         print(f"OK: public/bathy pronta — {nb} tile batimetrici", flush=True)
 
+    # 6) Il mare della carta di Spot GIÀ PRONTO (fondali_tessere.py): profondità e metri sulle linee,
+    #    committati in fondali_xyz/ con una cartella per versione (fondali-1/…) → public/fondali-1/….
+    #    Una versione nuova va in una cartella nuova: i telefoni tengono le tessere vecchie in cache.
+    fondali_src = os.path.join(HERE, "fondali_xyz")
+    if os.path.isdir(fondali_src):
+        for versione in sorted(os.listdir(fondali_src)):
+            src = os.path.join(fondali_src, versione)
+            if not os.path.isdir(src):
+                continue
+            dst = os.path.join(HERE, "public", versione)
+            if os.path.isdir(dst):
+                shutil.rmtree(dst)
+            shutil.copytree(src, dst)
+            nf = sum(len(fs) for _, _, fs in os.walk(dst))
+            print(f"OK: public/{versione} pronta — {nf} tessere del mare", flush=True)
+
     # Pagina indice/health (root del sito)
     with open(os.path.join(HERE, "public", "index.html"), "w", encoding="utf-8") as f:
         f.write("<!doctype html><meta charset=utf-8><title>cup8 CMEMS</title>"

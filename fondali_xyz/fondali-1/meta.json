@@ -1,0 +1,45 @@
+{
+ "quando": "2026-10-16 11:36",
+ "zona": [
+  5.5,
+  35.0,
+  19.5,
+  47.2
+ ],
+ "fondali_zoom": [
+  3,
+  12
+ ],
+ "isobate_zoom": [
+  6,
+  12
+ ],
+ "tessere": {
+  "profondita/10": 1167,
+  "profondita/11": 2122,
+  "profondita/12": 6591,
+  "profondita/3": 2,
+  "profondita/4": 2,
+  "profondita/5": 4,
+  "profondita/6": 12,
+  "profondita/7": 30,
+  "profondita/8": 100,
+  "profondita/9": 324,
+  "isobate/10": 1167,
+  "isobate/11": 2122,
+  "isobate/12": 6591,
+  "isobate/6": 12,
+  "isobate/7": 30,
+  "isobate/8": 100,
+  "isobate/9": 324
+ },
+ "mb": {
+  "profondita": 263.5,
+  "isobate": 7.8
+ },
+ "fonti": [
+  "EMODnet Bathymetry DTM (CC BY 4.0)",
+  "OpenStreetMap water polygons, osmdata.openstreetmap.de (ODbL)"
+ ],
+ "minuti": 7.4
+}
