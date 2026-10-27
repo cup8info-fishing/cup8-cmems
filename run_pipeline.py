@@ -84,6 +84,21 @@ def publish_daily(product, web_name):
     return True
 
 
+def publish_fondo():
+    """Il fondo caldo / fondo freddo di Spot (render_fondo.py): cache/fondo/ → public/fondo/
+    (meta.json + un file per giorno). Best-effort: senza meta salta."""
+    src = os.path.join(CACHE, "fondo")
+    if not os.path.exists(os.path.join(src, "meta.json")):
+        print("⚠ fondo: meta mancante — salto la pubblicazione.", flush=True)
+        return False
+    dst = os.path.join(HERE, "public", "fondo")
+    if os.path.isdir(dst):
+        shutil.rmtree(dst)
+    shutil.copytree(src, dst)
+    print(f"OK: public/fondo pronta — {len(os.listdir(dst)) - 1} giorni + meta.json", flush=True)
+    return True
+
+
 def main():
     os.makedirs(CACHE, exist_ok=True)
 
@@ -195,6 +210,13 @@ def main():
         if run_soft(["download_daily.py", "--product", product]):
             if run_soft(["render_daily_png.py", "--product", product]):
                 publish_daily(product, web_name)
+
+    # 4d) Il FONDO CALDO / FONDO FREDDO della carta di Spot: la linea dove il fondo entra nell'acqua
+    #     fredda sotto il termoclino e le temperature del fondo ai due lati, oggi e i due giorni dopo
+    #     (render_fondo.py, col fondale leggero fondo_griglia.npz committato). Best-effort.
+    if run_soft(["download_daily.py", "--product", "fondo"]):
+        if run_soft(["render_fondo.py"]):
+            publish_fondo()
 
     # 5) Batimetria: tile statici XYZ Web Mercator (committati in bathy_xyz/, lo SCHEMA
     #    che usa L.tileLayer dell'app) → public/bathy/. Servite dal CDN così NON pesano

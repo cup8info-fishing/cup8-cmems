@@ -11,11 +11,13 @@ lentamente e si guardano come UNA mappa del giorno (non un film ora-per-ora):
                Acqua verde = ricca di vita; i break di colore = zone di caccia.
   - temp3d   : Temperatura del mare in PROFONDITÀ (termoclino). Dataset phy-tem P1D-m,
                var thetao su livelli di profondità (0 → ~50 m).
+  - fondo    : Lo stesso thetao fino a ~200 m, solo sulla zona della carta di Spot (Italia e i
+               suoi mari), oggi e i due giorni dopo: il «fondo caldo / fondo freddo» (render_fondo.py).
 
 Scarica una piccola finestra temporale e il render prende l'ULTIMO timestep disponibile
 (il più recente), così non dipendiamo dal timestamp esatto del prodotto.
 
-Uso: python download_daily.py --product {sst-uhr,chl,temp3d}
+Uso: python download_daily.py --product {sst-uhr,chl,temp3d,fondo}
 
 Output: data/daily_<product>.nc
 """
@@ -54,6 +56,16 @@ PRODUCTS = {
         "max_depth": 55.0,    # dal primo livello (~1 m) a ~50 m: copre il termoclino estivo
         "back_days": 0, "fwd_days": 1,
     },
+    "fondo": {
+        "dataset_id": "cmems_mod_med_phy-tem_anfc_4.2km_P1D-m",
+        "variables": ["thetao"],
+        "out": "daily_fondo.nc",
+        # fino al livello di ~203 m: d'autunno il termoclino scende fino a 60-80 m e il fondo
+        # «freddo» va letto sotto
+        "max_depth": 210.0,
+        "back_days": 0, "fwd_days": 2,
+        "bbox": {"lng_min": 5.5, "lng_max": 19.5, "lat_min": 35, "lat_max": 47.2},   # app: zona.ts
+    },
 }
 
 
@@ -68,13 +80,14 @@ def main():
     start = now - timedelta(days=cfg["back_days"])
     end = now + timedelta(days=cfg["fwd_days"])
 
+    bbox = cfg.get("bbox", BBOX)
     cmd = [
         "copernicusmarine", "subset",
         "--dataset-id", cfg["dataset_id"],
-        "--minimum-longitude", str(BBOX["lng_min"]),
-        "--maximum-longitude", str(BBOX["lng_max"]),
-        "--minimum-latitude", str(BBOX["lat_min"]),
-        "--maximum-latitude", str(BBOX["lat_max"]),
+        "--minimum-longitude", str(bbox["lng_min"]),
+        "--maximum-longitude", str(bbox["lng_max"]),
+        "--minimum-latitude", str(bbox["lat_min"]),
+        "--maximum-latitude", str(bbox["lat_max"]),
         "--start-datetime", start.strftime("%Y-%m-%dT%H:%M:%S"),
         "--end-datetime", end.strftime("%Y-%m-%dT%H:%M:%S"),
         "--output-directory", DATA_DIR,

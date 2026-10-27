@@ -1,0 +1,391 @@
+{
+ "quando": "2026-10-23 20:51",
+ "zona": [
+  5.5,
+  35,
+  19.5,
+  47.2
+ ],
+ "fondali_zoom": [
+  3,
+  14
+ ],
+ "isobate_zoom": [
+  6,
+  12
+ ],
+ "tessere": {
+  "profondita/10": 1167,
+  "profondita/11": 2765,
+  "profondita/12": 6847,
+  "profondita/13": 176,
+  "profondita/14": 98,
+  "profondita/3": 2,
+  "profondita/4": 2,
+  "profondita/5": 4,
+  "profondita/6": 12,
+  "profondita/7": 30,
+  "profondita/8": 100,
+  "profondita/9": 324,
+  "isobate/10": 1167,
+  "isobate/11": 2765,
+  "isobate/12": 6847,
+  "isobate/6": 12,
+  "isobate/7": 30,
+  "isobate/8": 100,
+  "isobate/9": 324
+ },
+ "mb": {
+  "profondita": 114.9,
+  "isobate": 8.2
+ },
+ "controllo_disegno": {
+  "tessere": 537,
+  "segnalate": 11,
+  "cambiate": 0,
+  "nota": "Le 11 segnalate dal primo controllo (zone col margine) ricontrollate coi colori veri della carta: 0 punti diversi su 590 mila per tessera. Verifica a parte su 250 tessere scritte (z10-z14): 0 col disegno cambiato, 110/110 senza griglie fini identiche a fondali-1 (23/10/2026)."
+ },
+ "griglie_fini": [
+  {
+   "nome": "3234_CalabrianArc_subset",
+   "cella_primi": 0.03125,
+   "produttori": [
+    "Marum - Center for Marine Environmental Sciences, University of Bremen"
+   ],
+   "licenza": "Creative Commons Attribution 4.0 International"
+  },
+  {
+   "nome": "280_201201-Tyrrhenian Sea",
+   "cella_primi": 0.03125,
+   "produttori": [
+    "ICM-CSIC/ Institute of Marine Sciences",
+    "UTM-CSIC/Marine Technology Unit"
+   ],
+   "licenza": "Creative Commons Attribution 4.0 International"
+  },
+  {
+   "nome": "1338_SOUTH_CALABRIA_2",
+   "cella_primi": 0.03125,
+   "produttori": [
+    "Italian Navy Hydrographic Office"
+   ],
+   "licenza": "Creative Commons Attribution 4.0 International"
+  },
+  {
+   "nome": "1338_SOUTH_CALABRIA",
+   "cella_primi": 0.03125,
+   "produttori": [
+    "Italian Navy Hydrographic Office"
+   ],
+   "licenza": "Creative Commons Attribution 4.0 International"
+  },
+  {
+   "nome": "1338_PANTELLERIA_ISLAND",
+   "cella_primi": 0.03125,
+   "produttori": [
+    "Italian Navy Hydrographic Office"
+   ],
+   "licenza": "Creative Commons Attribution 4.0 International"
+  },
+  {
+   "nome": "1338_CASTELSARDO_CANYON",
+   "cella_primi": 0.03125,
+   "produttori": [
+    "Italian Navy Hydrographic Office"
+   ],
+   "licenza": "Creative Commons Attribution 4.0 International"
+  },
+  {
+   "nome": "486_HR_1_32_MarolisPenfeld2020",
+   "cella_primi": 0.03125,
+   "produttori": [
+    "Ifremer, Marine Geosciences"
+   ],
+   "licenza": "Creative Commons Attribution 4.0 International"
+  },
+  {
+   "nome": "486_HR_1_32_ESS_SMF_13SU1",
+   "cella_primi": 0.03125,
+   "produttori": [
+    "GENAVIR Brest",
+    "Ifremer, Marine Geosciences"
+   ],
+   "licenza": "Creative Commons Attribution 4.0 International"
+  },
+  {
+   "nome": "1338_LIGURIAN_CANYON",
+   "cella_primi": 0.03125,
+   "produttori": [
+    "Italian Navy Hydrographic Office"
+   ],
+   "licenza": "Creative Commons Attribution 4.0 International"
+  },
+  {
+   "nome": "145_Villafranca_Mass_Transport_Complex_Gioia_Basin",
+   "cella_primi": 0.03125,
+   "produttori": [
+    "CNR, Institute of Marine Science (ISMAR) - Bologna"
+   ],
+   "licenza": "Creative Commons Attribution 4.0 International"
+  },
+  {
+   "nome": "1338_CAPRAIA_ISLAND",
+   "cella_primi": 0.03125,
+   "produttori": [
+    "Italian Navy Hydrographic Office"
+   ],
+   "licenza": "Creative Commons Attribution 4.0 International"
+  },
+  {
+   "nome": "280_181102-CHIANTI1-4",
+   "cella_primi": 0.03125,
+   "produttori": [
+    "ICM-CSIC/ Institute of Marine Sciences",
+    "UTM-CSIC/Marine Technology Unit"
+   ],
+   "licenza": "Creative Commons Attribution 4.0 International"
+  },
+  {
+   "nome": "5921_CNR_West_Sardinia_64",
+   "cella_primi": 0.015625,
+   "produttori": [
+    "CNR, National Research Council, Institute of Marine Science (Napoli)"
+   ],
+   "licenza": "Creative Commons Attribution 4.0 International"
+  },
+  {
+   "nome": "145_Bari_Canyon_Gondola_Landslide",
+   "cella_primi": 0.015625,
+   "produttori": [
+    "CNR, Institute of Marine Science (ISMAR) - Bologna"
+   ],
+   "licenza": "Creative Commons Attribution 4.0 International"
+  },
+  {
+   "nome": "280_181103-GEOMARGEN2",
+   "cella_primi": 0.015625,
+   "produttori": [
+    "ICM-CSIC/ Institute of Marine Sciences",
+    "UTM-CSIC/Marine Technology Unit"
+   ],
+   "licenza": "Creative Commons Attribution 4.0 International"
+  },
+  {
+   "nome": "4036_CUMECS3_Heron_Canyon",
+   "cella_primi": 0.015625,
+   "produttori": [
+    "Marine Geology and Seafloor Surveying group, Department of Geosciences, University of Malta"
+   ],
+   "licenza": "Creative Commons Attribution 4.0 International"
+  },
+  {
+   "nome": "4036_CUMECS2_Cumecs_Canyon",
+   "cella_primi": 0.015625,
+   "produttori": [
+    "Marine Geology and Seafloor Surveying group, Department of Geosciences, University of Malta"
+   ],
+   "licenza": "Creative Commons Attribution 4.0 International"
+  },
+  {
+   "nome": "486_HR_1_64_Capcoral_1_2",
+   "cella_primi": 0.015625,
+   "produttori": [
+    "IFREMER / IDM / SISMER - Scientific Information Systems for the SEA",
+    "Universite de Corse / Ecosystemes Littoraux"
+   ],
+   "licenza": "Creative Commons Attribution 4.0 International"
+  },
+  {
+   "nome": "4036_CUMECS2_Noto_Canyon",
+   "cella_primi": 0.015625,
+   "produttori": [
+    "Marine Geology and Seafloor Surveying group, Department of Geosciences, University of Malta"
+   ],
+   "licenza": "Creative Commons Attribution 4.0 International"
+  },
+  {
+   "nome": "486_HR_1_64_ESSAIS_EM1000",
+   "cella_primi": 0.015625,
+   "produttori": [
+    "IFREMER / GM-MARINE GEOSCIENCES",
+    "IFREMER / IDM / SISMER - Scientific Information Systems for the SEA"
+   ],
+   "licenza": "Creative Commons Attribution 4.0 International"
+  },
+  {
+   "nome": "1338_NE_SARDINIA",
+   "cella_primi": 0.015625,
+   "produttori": [
+    "Italian Navy Hydrographic Office"
+   ],
+   "licenza": "Creative Commons Attribution 4.0 International"
+  },
+  {
+   "nome": "2276_reMESC_HR",
+   "cella_primi": 0.015625,
+   "produttori": [
+    "OGS (Istituto Nazionale di Oceanografia e di Geofisica Sperimentale), Infrastructures Division"
+   ],
+   "licenza": "Creative Commons Attribution 4.0 International"
+  },
+  {
+   "nome": "239_DTM_Conisma-Unisannio-3",
+   "cella_primi": 0.015625,
+   "produttori": [
+    "CONISMA, National Interuniversity Consortium for Marine Science"
+   ],
+   "licenza": "Creative Commons Attribution 4.0 International"
+  },
+  {
+   "nome": "1528_Venice_lagoon_IB_128",
+   "cella_primi": 0.007812,
+   "produttori": [
+    "Deltares"
+   ],
+   "licenza": "Creative Commons Attribution 4.0 International"
+  },
+  {
+   "nome": "3234_1568_2017_M144-1_EM122_Mediterranean",
+   "cella_primi": 0.007812,
+   "produttori": [
+    "GEOMAR Helmholtz Centre for Ocean Research Kiel",
+    "Marum - Center for Marine Environmental Sciences, University of Bremen"
+   ],
+   "licenza": "Creative Commons Attribution 4.0 International"
+  },
+  {
+   "nome": "4036_CUMECS_Cumecs_Canyon",
+   "cella_primi": 0.007812,
+   "produttori": [
+    "Marine Geology and Seafloor Surveying group, Department of Geosciences, University of Malta"
+   ],
+   "licenza": "Creative Commons Attribution 4.0 International"
+  },
+  {
+   "nome": "252_CNR-15-Licosa_HR",
+   "cella_primi": 0.007812,
+   "produttori": [
+    "CNR, Institute for the Marine and Coastal Environment (IAMC) - Napoli"
+   ],
+   "licenza": "Creative Commons Attribution 4.0 International"
+  },
+  {
+   "nome": "252_CNR-17-Parchi_HR",
+   "cella_primi": 0.007812,
+   "produttori": [
+    "CNR, Institute for the Marine and Coastal Environment (IAMC) - Napoli"
+   ],
+   "licenza": "Creative Commons Attribution 4.0 International"
+  },
+  {
+   "nome": "4036_CUMECS_Depression_Cumecs",
+   "cella_primi": 0.007812,
+   "produttori": [
+    "Marine Geology and Seafloor Surveying group, Department of Geosciences, University of Malta"
+   ],
+   "licenza": "Creative Commons Attribution 4.0 International"
+  },
+  {
+   "nome": "4036_CUMECS_Landslide_Cumecs",
+   "cella_primi": 0.007812,
+   "produttori": [
+    "Marine Geology and Seafloor Surveying group, Department of Geosciences, University of Malta"
+   ],
+   "licenza": "Creative Commons Attribution 4.0 International"
+  },
+  {
+   "nome": "4036_CUMECS_Ridge_Cumecs",
+   "cella_primi": 0.007812,
+   "produttori": [
+    "Marine Geology and Seafloor Surveying group, Department of Geosciences, University of Malta"
+   ],
+   "licenza": "Creative Commons Attribution 4.0 International"
+  },
+  {
+   "nome": "2918_DTM_CNR-IGAG-3",
+   "cella_primi": 0.007812,
+   "produttori": [
+    "CNR, Institute of Environmental Geology and Geoengineering (IGAG)"
+   ],
+   "licenza": "Creative Commons Attribution 4.0 International"
+  },
+  {
+   "nome": "2918_CNR-IGAG_51_Toscana9_Argentario_FD",
+   "cella_primi": 0.007812,
+   "produttori": [
+    "CNR, Institute of Environmental Geology and Geoengineering (IGAG)"
+   ],
+   "licenza": "Creative Commons Attribution 4.0 International"
+  },
+  {
+   "nome": "2917_CoNISMa_Uniroma1_27_AreaD_FD",
+   "cella_primi": 0.007812,
+   "produttori": [
+    "CONISMA, National Interuniversity Consortium for Marine Science"
+   ],
+   "licenza": "Creative Commons Attribution 4.0 International"
+  },
+  {
+   "nome": "239_DTM_Conisma-Unicagliari-4",
+   "cella_primi": 0.007812,
+   "produttori": [
+    "CONISMA, National Interuniversity Consortium for Marine Science"
+   ],
+   "licenza": "Creative Commons Attribution 4.0 International"
+  },
+  {
+   "nome": "2918_DTM_CNR-IGAG-2",
+   "cella_primi": 0.007812,
+   "produttori": [
+    "CNR, Institute of Environmental Geology and Geoengineering (IGAG)"
+   ],
+   "licenza": "Creative Commons Attribution 4.0 International"
+  },
+  {
+   "nome": "239_DTM_Conisma-Unicagliari-3",
+   "cella_primi": 0.007812,
+   "produttori": [
+    "CONISMA, National Interuniversity Consortium for Marine Science"
+   ],
+   "licenza": "Creative Commons Attribution 4.0 International"
+  },
+  {
+   "nome": "4036_RICS_Sinkholes",
+   "cella_primi": 0.007812,
+   "produttori": [
+    "Marine Geology and Seafloor Surveying group, Department of Geosciences, University of Malta"
+   ],
+   "licenza": "Creative Commons Attribution 4.0 International"
+  },
+  {
+   "nome": "145_DTM_CNR-ISMAR-124",
+   "cella_primi": 0.003906,
+   "produttori": [
+    "CNR, Institute of Marine Science (ISMAR) - Bologna"
+   ],
+   "licenza": "Creative Commons Attribution 4.0 International"
+  },
+  {
+   "nome": "252_CNR-02-04-Ischia_Procida_HR",
+   "cella_primi": 0.003906,
+   "produttori": [
+    "CNR, Institute for the Marine and Coastal Environment (IAMC) - Napoli"
+   ],
+   "licenza": "Creative Commons Attribution 4.0 International"
+  },
+  {
+   "nome": "239_DTM_Conisma-Uniroma-19",
+   "cella_primi": 0.003906,
+   "produttori": [
+    "CONISMA, National Interuniversity Consortium for Marine Science"
+   ],
+   "licenza": "Creative Commons Attribution 4.0 International"
+  }
+ ],
+ "fonti": [
+  "EMODnet Bathymetry DTM 2024 (CC BY 4.0)",
+  "EMODnet Bathymetry, griglie ad alta risoluzione (CC BY 4.0): CNR, Institute for the Marine and Coastal Environment (IAMC) - Napoli; CNR, Institute of Environmental Geology and Geoengineering (IGAG); CNR, Institute of Marine Science (ISMAR) - Bologna; CNR, National Research Council, Institute of Marine Science (Napoli); CONISMA, National Interuniversity Consortium for Marine Science; Deltares; GENAVIR Brest; GEOMAR Helmholtz Centre for Ocean Research Kiel; ICM-CSIC/ Institute of Marine Sciences; IFREMER / GM-MARINE GEOSCIENCES; IFREMER / IDM / SISMER - Scientific Information Systems for the SEA; Ifremer, Marine Geosciences; Italian Navy Hydrographic Office; Marine Geology and Seafloor Surveying group, Department of Geosciences, University of Malta; Marum - Center for Marine Environmental Sciences, University of Bremen; OGS (Istituto Nazionale di Oceanografia e di Geofisica Sperimentale), Infrastructures Division; UTM-CSIC/Marine Technology Unit; Universite de Corse / Ecosystemes Littoraux",
+  "OpenStreetMap water polygons, osmdata.openstreetmap.de (ODbL)"
+ ],
+ "minuti": 12.6
+}

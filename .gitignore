@@ -11,3 +11,4 @@ public/
 __pycache__/
 *.pyc
 *.bak.py
+.venv/
